@@ -1,36 +1,40 @@
 {
-  "name": "file_reader",
-  "version": "1.0.0",
-  "description": "监听文件消息并自动下载，提供 AI 文件读取动作",
-  "author": "MoFox Team",
-  "dependencies": {
-    "plugins": ["onebot_adapter"],
-    "components": []
-  },
-  "include": [
-    {
-      "component_type": "event_handler",
-      "component_name": "file_receiver",
-      "dependencies": [],
-      "enabled": true
+    "name": "file_reader",
+    "version": "1.0.1",
+    "description": "监听文件消息并自动下载，提供 AI 文件读取动作",
+    "author": "MoFox Team",
+    "dependencies": {
+        "plugins": [
+            "onebot_adapter"
+        ],
+        "components": []
     },
-    {
-      "component_type": "action",
-      "component_name": "read_downloaded_file",
-      "dependencies": [],
-      "enabled": true
-    }
-  ],
-  "entry_point": "plugin.py",
-  "min_core_version": "1.0.0",
-  "python_dependencies": ["aiohttp"],
-  "dependencies_required": true,
-  "categories": [
-    "tool"
-  ],
-  "tags": [
-    "file",
-    "reader",
-    "download"
-  ]
+    "include": [
+        {
+            "component_type": "event_handler",
+            "component_name": "file_receiver",
+            "dependencies": [],
+            "enabled": true
+        },
+        {
+            "component_type": "action",
+            "component_name": "read_downloaded_file",
+            "dependencies": [],
+            "enabled": true
+        }
+    ],
+    "entry_point": "plugin.py",
+    "min_core_version": "1.0.0",
+    "python_dependencies": [
+        "aiohttp"
+    ],
+    "dependencies_required": true,
+    "categories": [
+        "tool"
+    ],
+    "tags": [
+        "file",
+        "reader",
+        "download"
+    ]
 }
