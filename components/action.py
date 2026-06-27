@@ -2,13 +2,13 @@
 
 提供给 LLM 的 Action，用于按文件名和行数范围读取已下载的文件内容。
 通过自定义 go_activate 判断当前聊天流是否在白名单内，
-并在参数描述中注入当前已下载的文件列表。
+并在激活时动态将当前可用文件列表注入 action_description。
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Any, AsyncGenerator, cast
+from typing import Annotated, AsyncGenerator, cast
 
 from src.app.plugin_system.api.log_api import get_logger
 from src.core.components.base.action import BaseAction
@@ -17,28 +17,6 @@ from src.core.components.types import ChatType
 from .config import FileReaderConfig
 
 logger = get_logger("file_reader")
-
-
-def _get_available_files() -> list[str]:
-    """获取下载目录中的可用文件名列表。
-
-    Returns:
-        可用文件名列表
-    """
-    download_dir = Path("data/file_reader/downloads")
-    if not download_dir.exists():
-        return []
-    names = [f.name for f in download_dir.iterdir() if f.is_file()]
-    logger.info(f"当前可用文件: {names}")
-    return  names
-
-
-# 构建可用文件列表描述，供 LLM 在参数描述中参考
-_FILE_LIST_DESC = (
-    "要读取的文件名（不含路径）。当前可用文件：" + "、".join(_get_available_files())
-    if _get_available_files()
-    else "要读取的文件名（不含路径）"
-)
 
 
 class FileReadAction(BaseAction):
@@ -51,7 +29,7 @@ class FileReadAction(BaseAction):
 
     action_name: str = "read_downloaded_file"
     action_description: str = (
-        "读取已下载的文件内容。传入文件名和起始行号，"
+        f"读取已下载的文件内容。传入文件名和起始行号，"
         "返回从该行开始的内容片段，以及文件的总行数和当前读取位置。"
         "每次最多返回 50 行，如需继续读取请传入新的起始行号。"
     )
@@ -107,11 +85,21 @@ class FileReadAction(BaseAction):
             if user_ids and str(user_id) not in user_ids:
                 return False
 
+        # 动态更新 action_description，注入当前可用文件列表
+        file_names = [f.name for f in available_files]
+        file_list_str = "、".join(file_names)
+        FileReadAction.action_description = (
+            f"读取已下载的文件内容。传入文件名和起始行号，"
+            "返回从该行开始的内容片段，以及文件的总行数和当前读取位置。"
+            "每次最多返回 50 行，如需继续读取请传入新的起始行号。"
+            f"当前可用文件：{file_list_str}"
+        )
+
         return True
 
     async def execute(
         self,
-        file_name: Annotated[str, _FILE_LIST_DESC],
+        file_name: Annotated[str, "要读取的文件名（不含路径）"],
         start_line: Annotated[int, "起始行号（从 1 开始）"] = 1,
     ) -> AsyncGenerator[tuple[bool, str] | None, None]:
         """读取已下载文件的指定行范围内容。

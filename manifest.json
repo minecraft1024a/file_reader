@@ -1,6 +1,6 @@
 {
     "name": "file_reader",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "监听文件消息并自动下载，提供 AI 文件读取动作",
     "author": "MoFox Team",
     "dependencies": {
