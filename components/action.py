@@ -28,7 +28,9 @@ def _get_available_files() -> list[str]:
     download_dir = Path("data/file_reader/downloads")
     if not download_dir.exists():
         return []
-    return sorted(f.name for f in download_dir.iterdir() if f.is_file())
+    names = [f.name for f in download_dir.iterdir() if f.is_file()]
+    logger.info(f"当前可用文件: {names}")
+    return  names
 
 
 # 构建可用文件列表描述，供 LLM 在参数描述中参考
@@ -72,18 +74,22 @@ class FileReadAction(BaseAction):
         # 仅在 QQ 平台启用
         stream = self.chat_stream
         if stream.platform.lower() != "qq":
+            logger.info(f"当前平台 {stream.platform} 不在激活范围内，跳过文件读取动作")
             return False
 
         config = self._get_config()
         if not config:
+            logger.warning("文件读取插件配置未加载，无法激活文件读取动作")
             return False
 
         # 检查下载目录是否有文件
         download_dir = Path(config.storage.download_dir)
         if not download_dir.exists():
+            logger.warning(f"下载目录 {download_dir} 不存在，无法激活文件读取动作")
             return False
 
         available_files = [f for f in download_dir.iterdir() if f.is_file()]
+        logger.info(f"当前下载目录可用文件: {[f.name for f in available_files]}")
         if not available_files:
             return False
 
